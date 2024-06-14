@@ -3,6 +3,7 @@ import io
 import base64
 import requests
 import streamlit as st
+import pymupdf
 import fitz  # PyMuPDF
 from PIL import Image
 import json
