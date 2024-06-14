@@ -117,29 +117,50 @@ def question_image(url):
 def main():
     st.title("PDF/Image Extraction and OCR")
 
-    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf"])
+    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf", "jpeg","jpg", "png"])
     if uploaded_file is not None:
-        pdfpath = os.path.join("uploaded_files", uploaded_file.name)
-        if not os.path.exists("uploaded_files"):
-            os.makedirs("uploaded_files")
-        with open(pdfpath, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        
-        st.write("PDF uploaded successfully!")
+        file_type = uploaded_file.type
+        if file_type == "application/pdf":
+            pdfpath = os.path.join("uploaded_files", uploaded_file.name)
+            if not os.path.exists("uploaded_files"):
+                os.makedirs("uploaded_files")
+            with open(pdfpath, "wb") as f: 
+                f.write(uploaded_file.getbuffer())
+            
+            st.write("PDF uploaded successfully!")
 
-        outfolder = "extracted_images"
-        combined_image_path = extract_and_concat_images_from_pdf(pdfpath, outfolder)
+            outfolder = "extracted_images"
+            combined_image_path = extract_and_concat_images_from_pdf(pdfpath, outfolder)
 
-        st.image(combined_image_path, caption="Combined Image")
+            st.image(combined_image_path, caption="Combined Image")
 
-        # Perform OCR on the combined image
-        result = question_image(combined_image_path)
-        st.write("OCR Result:")
-        try:
-            result_json = json.loads(result)
-            st.json(result_json)
-        except json.JSONDecodeError:
-            st.write(result)
+            # Perform OCR on the combined image
+            result = question_image(combined_image_path)
+            st.write("OCR Result:")
+            try:
+                result_json = json.loads(result)
+                st.json(result_json)
+            except json.JSONDecodeError:
+                st.write(result)
+            
+            # Process image files
+        elif file_type in ["image/jpeg", "image/png", "image/jpg"]:
+            image = Image.open(uploaded_file)
+            image_path = os.path.join("uploaded_files", uploaded_file.name)
+            if not os.path.exists("uploaded_files"):
+                os.makedirs("uploaded_files")
+            image.save(image_path)
+
+            st.image(image_path, caption=os.path.basename(image_path))
+
+            # Perform OCR on the image
+            result = question_image(image_path)
+            st.write("OCR Result:")
+            try:
+                result_json = json.loads(result)
+                st.json(result_json)
+            except json.JSONDecodeError:
+                st.write(result)
 
 if __name__ == "__main__":
     main()
