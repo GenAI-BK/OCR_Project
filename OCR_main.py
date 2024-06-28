@@ -85,7 +85,7 @@ def question_image(url):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": f"{prompt}"},
-                        {"type": "image_url", "image_url": url},
+                        {"type": "image_url", "image_url": {"url":url, "detail":"low"}},
                     ],
                 }
             ],
@@ -101,7 +101,7 @@ def question_image(url):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": f"{prompt}"},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}","detail":"low"}},
                     ],
                 }
             ],
