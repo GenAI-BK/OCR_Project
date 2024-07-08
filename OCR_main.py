@@ -8,7 +8,7 @@ from PIL import Image
 import json
 
 
-# OpenAI API Key
+# OpenAI API Key...
 api_key = st.secrets["OPENAI_API_KEY"]
 
 # Define the prompt as a global variable
