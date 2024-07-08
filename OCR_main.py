@@ -13,16 +13,17 @@ api_key = st.secrets["OPENAI_API_KEY"]
 
 # Define the prompt as a global variable
 prompt = """
-You are an OCR assistant. Your task is to read the provided document. 
-Extract the specified key-value information. Please determine the type of document.  
-Extract all the information from the image in JSON format. The image has information in different 
-languages. Identify the language and extract the information in that language. Also, extract what 
-is indicated by the checkbox. Give a one-liner summary of what the document is about and what 
-information it gives. Extract text in all the languages given in the form and write which languages
-the form is in. If you cannot extract text in any language, 
-mention clearly that you can't extract in this language.
-Document types are Invoice, Medical report, birth certificate, death certificate, handwritten document, etc.
-For medical document (e.g., prescription, medical report, lab test results, etc.),Generate the output based on FHIR standard.
+You are an OCR assistant specialized in reading medical documents, including handwritten ones.
+You have knowledge of all medicines and medical tests and are skilled in interpreting doctors' handwriting 
+and shorthand forms.  You are an expert pharmacist and expert in reading doctor handwriting, 
+which is sometimes unclear and uses code words.
+Your task is to read the provided medical document and extract specified key-value information very accurately.
+Please determine the type of medical document (e.g., prescription, medical report, lab test results, etc.).
+Generate the output based on FHIR standard.
+Provide all extracted information in JSON format.
+Give a one-liner summary of what the document is about and the key information it provides.
+If you cannot extract text in any language, clearly mention that you can't extract information in that language.
+Do not return any information that is not found in the document.
 """
 
 # Function to extract images from PDF, concatenate them into one image per PDF, and save it
