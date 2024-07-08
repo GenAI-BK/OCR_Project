@@ -22,6 +22,7 @@ information it gives. Extract text in all the languages given in the form and wr
 the form is in. If you cannot extract text in any language, 
 mention clearly that you can't extract in this language.
 Document types are Invoice, Medical report, birth certificate, death certificate, handwritten document, etc.
+For medical document (e.g., prescription, medical report, lab test results, etc.),Generate the output based on FHIR standard.
 """
 
 # Function to extract images from PDF, concatenate them into one image per PDF, and save it
