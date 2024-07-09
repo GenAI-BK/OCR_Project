@@ -7,23 +7,32 @@ import fitz  # PyMuPDF
 from PIL import Image
 import json
 
-
-# OpenAI API Key...
+# OpenAI API Key
 api_key = st.secrets["OPENAI_API_KEY"]
 
-# Define the prompt as a global variable
-prompt = """
-You are an OCR assistant specialized in reading medical documents, including handwritten ones.
-You have knowledge of all medicines and medical tests and are skilled in interpreting doctors' handwriting 
-and shorthand forms.  You are an expert pharmacist and expert in reading doctor handwriting, 
-which is sometimes unclear and uses code words.
+# Define the prompts as global variables
+medical_prompt = """You are an OCR assistant specialized in reading medical documents, including handwritten ones.
+You have knowledge of all medicines and medical tests.
 Your task is to read the provided medical document and extract specified key-value information very accurately.
 Please determine the type of medical document (e.g., prescription, medical report, lab test results, etc.).
 Generate the output based on FHIR standard.
 Provide all extracted information in JSON format.
 Give a one-liner summary of what the document is about and the key information it provides.
 If you cannot extract text in any language, clearly mention that you can't extract information in that language.
+If the document is not related to medical, do not answer anything.
+Retrieve only the information mentioned in the document; do not go out of context.
 Do not return any information that is not found in the document.
+
+"""
+
+generic_prompt = """You are an OCR assistant. Your task is to read the provided document. Extract the specified key-value information. 
+Please determine the type of document. Extract all the information from the image in JSON format. 
+The image has information in different languages. Identify the language and extract the information 
+in that language. Also, extract what is indicated by the checkbox. Give a one-liner summary of what 
+the document is about and what information it gives. Extract text in all the languages given in the form 
+and write which languages the form is in. If you cannot extract text in any language, mention clearly 
+that you can't extract in this language. Document types are Invoice, birth certificate,Bills 
+death certificate, handwritten document, etc. 
 """
 
 # Function to extract images from PDF, concatenate them into one image per PDF, and save it
@@ -73,7 +82,7 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 # Function to make request to OpenAI API
-def question_image(url):
+def question_image(url, prompt):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
@@ -87,7 +96,7 @@ def question_image(url):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": f"{prompt}"},
-                        {"type": "image_url", "image_url": {"url":url, "detail":"high"}},
+                        {"type": "image_url", "image_url": {"url": url, "detail": "auto"}},
                     ],
                 }
             ],
@@ -103,7 +112,7 @@ def question_image(url):
                     "role": "user",
                     "content": [
                         {"type": "text", "text": f"{prompt}"},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}","detail":"high"}},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}", "detail": "auto"}},
                     ],
                 }
             ],
@@ -116,10 +125,25 @@ def question_image(url):
         return f"Error processing image: {response.text}"
 
 # Streamlit frontend
+# Streamlit frontend
 def main():
     st.title("PDF/Image Extraction and OCR")
 
-    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf", "jpeg","jpg", "png"])
+    uploaded_file = st.file_uploader("Choose a PDF file", type=["pdf", "jpeg", "jpg", "png"])
+
+    # Sidebar button selection
+    with st.sidebar:
+        doc_type = st.radio(
+            "Select Document Type",
+            ('Generic Document', 'Medical Document'),
+            index=0  # Default selection is "Generic Document"
+        )
+        
+        if doc_type == 'Generic Document':
+            selected_prompt = generic_prompt
+        else:
+            selected_prompt = medical_prompt
+
     if uploaded_file is not None:
         file_type = uploaded_file.type
         if file_type == "application/pdf":
@@ -137,7 +161,8 @@ def main():
             st.image(combined_image_path, caption="Combined Image")
 
             # Perform OCR on the combined image
-            result = question_image(combined_image_path)
+            result = question_image(combined_image_path, selected_prompt)
+            
             st.write("OCR Result:")
             try:
                 result_json = json.loads(result)
@@ -145,7 +170,7 @@ def main():
             except json.JSONDecodeError:
                 st.write(result)
             
-            # Process image files
+        # Process image files
         elif file_type in ["image/jpeg", "image/png", "image/jpg"]:
             image = Image.open(uploaded_file)
             image_path = os.path.join("uploaded_files", uploaded_file.name)
@@ -156,7 +181,8 @@ def main():
             st.image(image_path, caption=os.path.basename(image_path))
 
             # Perform OCR on the image
-            result = question_image(image_path)
+            result = question_image(image_path, selected_prompt)
+            
             st.write("OCR Result:")
             try:
                 result_json = json.loads(result)
@@ -166,7 +192,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
